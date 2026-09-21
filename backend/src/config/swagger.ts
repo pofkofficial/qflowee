@@ -1,8 +1,5 @@
 import swaggerJSDoc from 'swagger-jsdoc';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const options: swaggerJSDoc.Options = {
   definition: {
@@ -30,7 +27,14 @@ const options: swaggerJSDoc.Options = {
       },
     },
   },
-  apis: [path.join(__dirname, '../routes/**/*.ts')],
+  // Include both .ts and .js files using process.cwd()
+  apis: [
+    path.join(process.cwd(), 'src/routes/**/*.ts'),
+    path.join(process.cwd(), 'src/routes/**/*.js'),
+    path.join(process.cwd(), 'dist/routes/**/*.js'),
+    path.join(process.cwd(), 'routes/**/*.ts'),
+    path.join(process.cwd(), 'routes/**/*.js'),
+  ],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
