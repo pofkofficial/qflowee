@@ -1,5 +1,4 @@
 import swaggerJSDoc from 'swagger-jsdoc';
-import path from 'path';
 
 const options: swaggerJSDoc.Options = {
   definition: {
@@ -27,13 +26,13 @@ const options: swaggerJSDoc.Options = {
       },
     },
   },
-  // Include both .ts and .js files using process.cwd()
+  // Provide absolute glob relative to __dirname (compiled file position)
   apis: [
-    path.join(process.cwd(), 'src/routes/**/*.ts'),
-    path.join(process.cwd(), 'src/routes/**/*.js'),
-    path.join(process.cwd(), 'dist/routes/**/*.js'),
-    path.join(process.cwd(), 'routes/**/*.ts'),
-    path.join(process.cwd(), 'routes/**/*.js'),
+    './src/routes/**/*.ts',
+    './src/routes/**/*.js',
+    './routes/**/*.ts',
+    './routes/**/*.js',
+    './dist/routes/**/*.js'
   ],
 };
 
