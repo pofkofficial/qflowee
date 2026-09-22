@@ -11,8 +11,11 @@ import {
   updateTicketStatus,
   recallTicket,
   getStaffShiftOverview,
+  getAllTickets,
 } from '../services/staff.service.js';
 import { getSafeErrorMessage } from '../utils/errorHandler.js';
+import { TicketStatus} from '@qflow/database/client';
+
 
 // GET /api/counters
 export async function handleListCounters(_req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -195,5 +198,24 @@ export async function handleGetShiftOverview(req: AuthenticatedRequest, res: Res
   } catch (error: any) {
     console.error('Get shift overview failed:', error);
     res.status(400).json({ error: getSafeErrorMessage(error, 'Failed to retrieve shift overview.') });
+  }
+}
+
+// GET /api/v1/staff/tickets
+export async function handleGetAllTickets(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { status, search, page, limit } = req.query;
+
+    const result = await getAllTickets({
+      status: status ? (status as TicketStatus) : undefined,
+      search: search ? String(search) : undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 50,
+    });
+
+    res.status(200).json(result);
+  } catch (error: any) {
+    console.error('Get all tickets failed:', error);
+    res.status(500).json({ error: getSafeErrorMessage(error, 'Failed to retrieve tickets.') });
   }
 }

@@ -277,3 +277,63 @@ export async function getStaffShiftOverview(staffId: string) {
 
   return { counter, activeTicket: currentCalledTicket, waitingCount };
 }
+
+// List all tickets with optional status filtering, search, and pagination
+export async function getAllTickets(filters: {
+  status?: TicketStatus;
+  search?: string;
+  page?: number;
+  limit?: number;
+}) {
+  const page = filters.page || 1;
+  const limit = Math.min(filters.limit || 50, 100);
+  const skip = (page - 1) * limit;
+
+  const whereClause: any = {};
+
+  if (filters.status) {
+    whereClause.status = filters.status;
+  }
+
+  if (filters.search) {
+    whereClause.OR = [
+      { ticketNumber: { contains: filters.search, mode: 'insensitive' } },
+      { customerName: { contains: filters.search, mode: 'insensitive' } },
+      { phoneNumber: { contains: filters.search, mode: 'insensitive' } },
+    ];
+  }
+
+  const [tickets, totalCount] = await Promise.all([
+    prisma.ticket.findMany({
+      where: whereClause,
+      orderBy: { joinedAt: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        counter: {
+          select: {
+            counterNumber: true,
+            counterName: true,
+          },
+        },
+        servicedByStaff: {
+          select: {
+            employeeId: true,
+            fullName: true,
+          },
+        },
+      },
+    }),
+    prisma.ticket.count({ where: whereClause }),
+  ]);
+
+  return {
+    tickets,
+    pagination: {
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+    },
+  };
+}

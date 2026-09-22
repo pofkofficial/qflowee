@@ -9,6 +9,7 @@ import {
   handleSkipTicket,
   handleStartService,
   handleCompleteService,
+  handleGetAllTickets,
 } from '../controllers/staff.controller.js';
 
 import { requireCounterStaff } from '../middlewares/staff.middleware.js';
@@ -66,6 +67,101 @@ router.use(authenticateToken, requireCounterStaff);
  *         description: Forbidden - requires counter staff role
  */
 router.get('/counters', handleListCounters);
+
+/**
+ * @openapi
+ * /api/v1/staff/tickets:
+ *   get:
+ *     summary: Retrieve queue tickets with filtering, search, and pagination
+ *     tags: [Admin - Queue Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [WAITING, CALLED, IN_SERVICE, SERVED, SKIPPED, CANCELLED, AUTO_CANCELLED]
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive match against ticket number, customer name, or phone number
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 100
+ *     responses:
+ *       200:
+ *         description: Paginated list of tickets, newest first
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tickets:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       ticketNumber:
+ *                         type: string
+ *                       customerName:
+ *                         type: string
+ *                       phoneNumber:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [WAITING, CALLED, IN_SERVICE, SERVED, SKIPPED, CANCELLED, AUTO_CANCELLED]
+ *                       joinedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       counter:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           counterNumber:
+ *                             type: integer
+ *                           counterName:
+ *                             type: string
+ *                       servicedByStaff:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           employeeId:
+ *                             type: string
+ *                           fullName:
+ *                             type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalCount:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Admin access required
+ */
+router.get('/tickets', handleGetAllTickets);
 
 /**
  * @openapi
