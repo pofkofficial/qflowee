@@ -2,7 +2,7 @@ import { prisma } from '../config/db.js';
 import { TicketStatus } from '@qflow/database/client';
 import { broadcastQueueEvent, SOCKET_EVENTS } from '../sockets/queue.socket.js';
 import { logNotification } from '../utils/lognotification.js';
-
+import { Prisma } from '@prisma/client';
 /**
  * 3. Staff Actions on tickets
  */
@@ -150,7 +150,7 @@ export async function skipTicket(ticketId: string, staffId: string) {
 
 //-------------Mark Ticket as IN_SERVICE (Customer arrives at register)---------------
 export async function markTicketInService(ticketId: string, staffId: string) {
-  const updatedTicket = await prisma.$transaction(async (tx) => {
+  const updatedTicket = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const ticket = await tx.ticket.findUnique({ where: { id: ticketId } });
     if (!ticket || ticket.status !== TicketStatus.CALLED) {
       throw new Error('Ticket must be in CALLED status to start service.');
@@ -177,7 +177,7 @@ export async function markTicketInService(ticketId: string, staffId: string) {
 
 //-------------Mark Ticket as SERVED (Completed transaction)---------------
 export async function markTicketServed(ticketId: string) {
-  const updatedTicket = await prisma.$transaction(async (tx) => {
+  const updatedTicket = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const ticket = await tx.ticket.findUnique({ where: { id: ticketId } });
     if (!ticket || ticket.status !== TicketStatus.IN_SERVICE) {
       throw new Error('Ticket must be IN_SERVICE to mark as served.');
