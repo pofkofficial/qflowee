@@ -107,44 +107,46 @@ export async function callNextTicketByEmployeeId(employeeId: string) {
 
 //-----------------Skip Ticket (Applies 3-Skip Auto-Cancellation Rule)--------------
 export async function skipTicket(ticketId: string, staffId: string) {
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
-  if (!ticket) throw new Error('Ticket not found.');
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const ticket = await tx.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) throw new Error('Ticket not found.');
 
-  const newSkipCount = ticket.skipCount + 1;
+    const newSkipCount = ticket.skipCount + 1;
 
-  if (newSkipCount >= 3) {
-    const autoCancelledTicket = await prisma.ticket.update({
+    if (newSkipCount >= 3) {
+      const autoCancelledTicket = await tx.ticket.update({
+        where: { id: ticketId },
+        data: {
+          skipCount: newSkipCount,
+          status: TicketStatus.AUTO_CANCELLED,
+          cancelledAt: new Date(),
+          currentPosition: 0,
+        },
+      });
+
+      await logNotification(
+        ticketId,
+        ticket.preferredChannel,
+        'AUTO_CANCELLED',
+        `Your ticket ${ticket.ticketNumber} has been automatically cancelled after 3 skipped calls.`,
+        ticket.phoneNumber
+      );
+
+      return autoCancelledTicket;
+    }
+
+    const waitingCount = await tx.ticket.count({ where: { status: 'WAITING' } });
+
+    return tx.ticket.update({
       where: { id: ticketId },
       data: {
         skipCount: newSkipCount,
-        status: TicketStatus.AUTO_CANCELLED,
-        cancelledAt: new Date(),
-        currentPosition: 0,
+        status: TicketStatus.WAITING,
+        skippedAt: new Date(),
+        counterId: null,
+        currentPosition: waitingCount + 1,
       },
     });
-
-    await logNotification(
-      ticketId,
-      ticket.preferredChannel,
-      'AUTO_CANCELLED',
-      `Your ticket ${ticket.ticketNumber} has been automatically cancelled after 3 skipped calls.`,
-      ticket.phoneNumber
-    );
-
-    return autoCancelledTicket;
-  }
-
-  const waitingCount = await prisma.ticket.count({ where: { status: 'WAITING' } });
-
-  return prisma.ticket.update({
-    where: { id: ticketId },
-    data: {
-      skipCount: newSkipCount,
-      status: TicketStatus.WAITING,
-      skippedAt: new Date(),
-      counterId: null,
-      currentPosition: waitingCount + 1,
-    },
   });
 }
 
