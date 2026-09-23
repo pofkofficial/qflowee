@@ -405,7 +405,7 @@ router.post('/tickets/:id/recall', handleRecallTicket);
 
 /**
  * @openapi
- * /api/v1/counters/tickets/{id}/skip:
+ * /api/v1/staff/tickets/{id}/skip:
  *   post:
  *     summary: Skip a ticket (e.g., customer no-show)
  *     tags: [Counter Staff]
@@ -439,7 +439,7 @@ router.post('/tickets/:id/recall', handleRecallTicket);
  *       404:
  *         description: Ticket not found
  */
-router.post('/staff/tickets/:id/skip', handleSkipTicket);
+router.post('/tickets/:id/skip', handleSkipTicket);
 
 /**
  * @openapi
@@ -479,7 +479,7 @@ router.post('/staff/tickets/:id/skip', handleSkipTicket);
  *       404:
  *         description: Ticket not found
  */
-router.post('/staff/tickets/:id/start', handleStartService);
+router.post('/tickets/:id/start', handleStartService);
 
 /**
  * @openapi
@@ -519,6 +519,6 @@ router.post('/staff/tickets/:id/start', handleStartService);
  *       404:
  *         description: Ticket not found
  */
-router.post('staff/tickets/:id/complete', handleCompleteService);
+router.post('/tickets/:id/complete', handleCompleteService);
 
 export default router;
